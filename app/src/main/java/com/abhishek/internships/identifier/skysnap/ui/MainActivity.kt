@@ -1,4 +1,4 @@
-package com.abhishek.internships.identifier.skysnap
+package com.abhishek.internships.identifier.skysnap.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.abhishek.internships.identifier.skysnap.R
 import com.abhishek.internships.identifier.skysnap.util.Constant
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -84,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         mFusedLocationClient.requestLocationUpdates(locationRequest, object: LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 Toast.makeText(this@MainActivity, "Location $locationResult", Toast.LENGTH_SHORT).show()
+                getLocationWeatherDetails()
             }
         }, Looper.myLooper())
     }
@@ -142,5 +144,13 @@ class MainActivity : AppCompatActivity() {
             }.setTitle("Location Permission Needed")
             .setMessage("This app needs the Location permission, please accept to use location functionality")
             .show()
+    }
+
+    private fun getLocationWeatherDetails(){
+        if (Constant.isNetworkAvailable(this)){
+            Toast.makeText(this, "Network Available", Toast.LENGTH_SHORT).show()
+        }else{
+            Toast.makeText(this, "Network Not Available", Toast.LENGTH_SHORT).show()
+        }
     }
 }
