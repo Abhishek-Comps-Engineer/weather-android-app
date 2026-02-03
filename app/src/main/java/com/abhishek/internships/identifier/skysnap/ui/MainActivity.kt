@@ -1,6 +1,7 @@
 package com.abhishek.internships.identifier.skysnap.ui
 
 import android.Manifest
+import android.R.attr.resource
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
@@ -19,6 +20,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.abhishek.internships.identifier.skysnap.R
+import com.abhishek.internships.identifier.skysnap.databinding.ActivityMainBinding
+import com.abhishek.internships.identifier.skysnap.retrofitcall.ServiceApi
 import com.abhishek.internships.identifier.skysnap.util.Constant
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -26,19 +29,22 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import kotlin.jvm.java
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
 
+    private val binding by lazy {
+        ActivityMainBinding.inflate(layoutInflater)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        setContentView(binding.main)
+        applyInsets()
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -51,9 +57,25 @@ class MainActivity : AppCompatActivity() {
         }else{
             Toast.makeText(this, "Location is enabled", Toast.LENGTH_SHORT).show()
 //            If location is enabled then start the service
-            requestPermission()  // always ask permission
+            requestPermission()  // always ask permission -> problem
         }
 
+    }
+
+    private fun applyInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val padding = resources.getDimensionPixelSize(R.dimen.screen_padding)
+
+            v.setPadding(
+                systemBars.left +padding,
+                systemBars.top +padding,
+                systemBars.right +padding,
+                systemBars.bottom +padding
+            )
+            insets
+        }
     }
 
 
@@ -149,6 +171,18 @@ class MainActivity : AppCompatActivity() {
     private fun getLocationWeatherDetails(){
         if (Constant.isNetworkAvailable(this)){
             Toast.makeText(this, "Network Available", Toast.LENGTH_SHORT).show()
+            val retrofit = Retrofit.Builder()
+                .baseUrl(Constant.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+
+            val serviceApi = retrofit.create(ServiceApi::class.java)
+
+
+
+
+
+
         }else{
             Toast.makeText(this, "Network Not Available", Toast.LENGTH_SHORT).show()
         }

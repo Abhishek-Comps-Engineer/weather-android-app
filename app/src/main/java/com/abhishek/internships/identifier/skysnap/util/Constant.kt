@@ -11,6 +11,8 @@ object Constant {
     const val PREFERENCE_NAME = "SkySnap"
     const val NEW_USER = "NEW_USER"
 
+    const val BASE_URL = "https://api.openweathermap.org/data/2.5/weather?"
+
 
     fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager =

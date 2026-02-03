@@ -6,4 +6,8 @@
     <color name="dark_blue">#161620</color>
     <color name="light_blue">#4E93D5</color>
     <color name="dark_yellow">#937345</color>
+    <color name="blue_alpha">#20ADD8E6</color>
+    <color name="light_blue_alpha">#40ADD8E6</color>
+    <color name="dark_yellow_alpha">#40DAA520</color>
+
 </resources>
