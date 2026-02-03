@@ -1,7 +1,6 @@
 package com.abhishek.internships.identifier.skysnap.ui
 
 import android.Manifest
-import android.R.attr.resource
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
@@ -12,6 +11,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresPermission
@@ -21,6 +21,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.abhishek.internships.identifier.skysnap.R
 import com.abhishek.internships.identifier.skysnap.databinding.ActivityMainBinding
+import com.abhishek.internships.identifier.skysnap.model.WeatherResponse
+import com.abhishek.internships.identifier.skysnap.retrofitcall.RetrofitClient
 import com.abhishek.internships.identifier.skysnap.retrofitcall.ServiceApi
 import com.abhishek.internships.identifier.skysnap.util.Constant
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -29,6 +31,9 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import kotlin.jvm.java
@@ -40,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
+    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -49,18 +55,28 @@ class MainActivity : AppCompatActivity() {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
 
-        if ( !isLocationEnable()){
-//            If location is not enabled then show alert dialog
-            Toast.makeText(this, "Please enable location", Toast.LENGTH_SHORT).show()
-            val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-            startActivity(intent)
-        }else{
-            Toast.makeText(this, "Location is enabled", Toast.LENGTH_SHORT).show()
-//            If location is enabled then start the service
-            requestPermission()  // always ask permission -> problem
+        if (!isLocationEnable()) {
+            openLocationSettings()
+        } else if (hasLocationPermission()) {
+            requestLocationData()
+        } else {
+            requestPermission()
         }
 
+
     }
+
+    private fun openLocationSettings() {
+        startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+        Toast.makeText(this, "Please turn on your location", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return ActivityCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
 
     private fun applyInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -69,10 +85,10 @@ class MainActivity : AppCompatActivity() {
             val padding = resources.getDimensionPixelSize(R.dimen.screen_padding)
 
             v.setPadding(
-                systemBars.left +padding,
-                systemBars.top +padding,
-                systemBars.right +padding,
-                systemBars.bottom +padding
+                systemBars.left + padding,
+                systemBars.top + padding,
+                systemBars.right + padding,
+                systemBars.bottom + padding
             )
             insets
         }
@@ -86,42 +102,48 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode == Constant.REQUEST_LOCATION_CONSTANT
+        if (requestCode == Constant.REQUEST_LOCATION_CONSTANT
             && grantResults.isNotEmpty()
             && grantResults[0] == PackageManager.PERMISSION_GRANTED
-        ){
+        ) {
             Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show()
             requestLocationData()
-        }else{
+        } else {
             Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show()
         }
     }
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     private fun requestLocationData() {
-        val locationRequest = LocationRequest.Builder(
+
+        val request = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
             1000
-        ).build()
+        ).setMaxUpdates(1).build()
 
-        mFusedLocationClient.requestLocationUpdates(locationRequest, object: LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                Toast.makeText(this@MainActivity, "Location $locationResult", Toast.LENGTH_SHORT).show()
-                getLocationWeatherDetails()
-            }
-        }, Looper.myLooper())
+        mFusedLocationClient.requestLocationUpdates(
+            request,
+            object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult) {
+                    val location = result.lastLocation ?: return
+                    mFusedLocationClient.removeLocationUpdates(this)
+                    getLocationWeatherDetails(location.latitude, location.longitude)
+                }
+            },
+            Looper.getMainLooper()
+        )
     }
 
 
-//    ✅ It tells you whether the device’s location services are turned on not
-    private fun isLocationEnable(): Boolean{
+    //    ✅ It tells you whether the device’s location services are turned on not
+    private fun isLocationEnable(): Boolean {
         var locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
                 || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
 
-//    The user has granted location permission to YOUR APP for access location
+    //    The user has granted location permission to YOUR APP for access location
     private fun requestPermission() {
         if (
             ActivityCompat.shouldShowRequestPermissionRationale(
@@ -148,43 +170,54 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showRequestDialog(){
+    private fun showRequestDialog() {
         AlertDialog.Builder(this)
-            .setPositiveButton("GO TO SETTINGS"){ _,_ ->
-                try{
-                    val intent  = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            .setPositiveButton("GO TO SETTINGS") { _, _ ->
+                try {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                     val uri = Uri.fromParts("package", packageName, null)
                     intent.data = uri
                     startActivity(intent)
-                }catch (activity: ActivityNotFoundException){
+                } catch (activity: ActivityNotFoundException) {
                     activity.printStackTrace()
-                }catch(e: Exception){
+                } catch (e: Exception) {
                     e.printStackTrace()
                 }
-            }.setNegativeButton("CANCEL"){dialog,_ ->
+            }.setNegativeButton("CANCEL") { dialog, _ ->
                 dialog.cancel()
             }.setTitle("Location Permission Needed")
             .setMessage("This app needs the Location permission, please accept to use location functionality")
             .show()
     }
 
-    private fun getLocationWeatherDetails(){
-        if (Constant.isNetworkAvailable(this)){
-            Toast.makeText(this, "Network Available", Toast.LENGTH_SHORT).show()
-            val retrofit = Retrofit.Builder()
-                .baseUrl(Constant.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
+    private fun getLocationWeatherDetails(latitude: Double, longitude: Double) {
 
-            val serviceApi = retrofit.create(ServiceApi::class.java)
-
-
-
-
-
-
-        }else{
-            Toast.makeText(this, "Network Not Available", Toast.LENGTH_SHORT).show()
+        if (!Constant.isNetworkAvailable(this)) {
+            Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        RetrofitClient.api.getWeatherDetails(
+            latitude,
+            longitude,
+            Constant.API_KEY,
+            Constant.METRIC_UNIT
+        ).enqueue(object : Callback<WeatherResponse> {
+
+            override fun onResponse(
+                call: Call<WeatherResponse>,
+                response: Response<WeatherResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val data = response.body()
+                    Log.d("TAG", "onResponse: $data")
+
+                }
+            }
+
+            override fun onFailure(call: Call<WeatherResponse>, t: Throwable) {
+                Toast.makeText(this@MainActivity, "API failed", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 }

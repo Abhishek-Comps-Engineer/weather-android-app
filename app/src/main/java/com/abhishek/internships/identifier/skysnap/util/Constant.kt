@@ -7,12 +7,14 @@ import android.os.Build.*
 
 object Constant {
 
+    const val API_KEY  = "d1607e2f4d8cd6ea126582247ea43f15"
     const val REQUEST_LOCATION_CONSTANT = 6223
     const val PREFERENCE_NAME = "SkySnap"
     const val NEW_USER = "NEW_USER"
 
-    const val BASE_URL = "https://api.openweathermap.org/data/2.5/weather?"
+    const val BASE_URL = "https://api.openweathermap.org/data/"
 
+    const val METRIC_UNIT = "metric"
 
     fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager =
