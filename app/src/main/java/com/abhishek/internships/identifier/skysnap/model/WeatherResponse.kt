@@ -13,7 +13,9 @@ data class WeatherResponse(
     val timezone_abbreviation: String? = null,
     val elevation: Int? = null,
     val current_units: CurrentUnits? = null,
-    val current: Current? = null
+    val current: Current? = null,
+    val hourly_units : HourlyUnits? = null,
+    val hourly : Hourly? = null,
 )
 
 

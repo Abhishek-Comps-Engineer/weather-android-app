@@ -25,6 +25,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.emoji2.text.EmojiCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.abhishek.internships.identifier.skysnap.R
+import com.abhishek.internships.identifier.skysnap.adapter.HourlyAdapter
 import com.abhishek.internships.identifier.skysnap.adpater.CityAdapter
 import com.abhishek.internships.identifier.skysnap.databinding.ActivityMainBinding
 import com.abhishek.internships.identifier.skysnap.util.Constant
@@ -40,7 +41,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
     private val viewModel by viewModels<MainViewModel>()
-    private val adapter = CityAdapter()
+    private val adapterCity = CityAdapter()
+
+    private val adapterHour = HourlyAdapter()
+
     private val TAG = "MainActivity"
 
     private val binding by lazy {
@@ -55,12 +59,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.main)
         applyInsets()
 
-        Log.d(TAG, "EmojiCompat initialized = ${EmojiCompat.isConfigured()}")
-
         setupRecyclerView()
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // Attach observer BEFORE requesting location
+
+
         observeCityData()
 
         // Request location if enabled & permission granted
@@ -79,7 +83,14 @@ class MainActivity : AppCompatActivity() {
             LinearLayoutManager.HORIZONTAL,
             false
         )
-        binding.cityItemRecyclerView.adapter = adapter
+
+        binding.hourlyScroll.layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        binding.cityItemRecyclerView.adapter = adapterCity
+        binding.hourlyScroll.adapter = adapterHour
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -102,6 +113,9 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 binding.tvDate.text = viewModel.formatDate(weather.current?.time.toString())
+
+                adapterHour.setData(weather)
+
             } else {
                 Log.d(TAG, "No current weather data")
             }

@@ -16,8 +16,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Mostly Sunny"
-        android:fontFamily="@font/poppins_light"
+        android:text="@string/app_name"
+        android:fontFamily="@font/poppins_bold"
         android:textColor="@android:color/white"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -44,10 +44,10 @@
                 android:id="@+id/temperatureTxt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="23°"
+                android:text="23°C"
                 android:layout_gravity="center_horizontal"
                 android:textColor="@android:color/white"
-                android:textSize="120sp"
+                android:textSize="100sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
@@ -100,7 +100,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cloud"
+                    android:text="@string/pressure"
                     android:fontFamily="@font/poppins_light"
                     android:textColor="@color/white"
                     android:textSize="14sp" />
@@ -132,7 +132,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Humidity"
+                    android:text="@string/humidity"
                     android:textColor="@color/white"
                     android:fontFamily="@font/poppins_light"
                     android:textSize="14sp" />
@@ -157,14 +157,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="10km/h"
-                    android:textSize="16dp"
+                    android:textSize="16sp"
                     android:textColor="@android:color/white"
                     android:fontFamily="@font/poppins_semi_bold"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Wind Speed"
+                    android:text="@string/wind_speed"
                     android:textColor="@color/white"
                     android:textSize="14sp"
                     android:fontFamily="@font/poppins_light"/>
