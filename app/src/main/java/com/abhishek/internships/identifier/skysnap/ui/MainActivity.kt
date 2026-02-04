@@ -14,32 +14,32 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.emoji2.text.EmojiCompat
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.abhishek.internships.identifier.skysnap.R
+import com.abhishek.internships.identifier.skysnap.adpater.CityAdapter
 import com.abhishek.internships.identifier.skysnap.databinding.ActivityMainBinding
-import com.abhishek.internships.identifier.skysnap.model.WeatherResponse
-import com.abhishek.internships.identifier.skysnap.retrofitcall.RetrofitClient
-import com.abhishek.internships.identifier.skysnap.retrofitcall.ServiceApi
 import com.abhishek.internships.identifier.skysnap.util.Constant
+import com.abhishek.internships.identifier.skysnap.viewmodel.MainViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import kotlin.jvm.java
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
+    private val viewModel by viewModels<MainViewModel>()
+    private val adapter = CityAdapter(context = this)
+    private val TAG = "MainActivity"
 
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
@@ -52,9 +52,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.main)
         applyInsets()
 
+        Log.d(TAG, "EmojiCompat initialized = ${EmojiCompat.isConfigured()}")
+
+        setupRecyclerView()
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        // Attach observer BEFORE requesting location
+        observeCityData()
 
+        // Request location if enabled & permission granted
         if (!isLocationEnable()) {
             openLocationSettings()
         } else if (hasLocationPermission()) {
@@ -62,8 +68,27 @@ class MainActivity : AppCompatActivity() {
         } else {
             requestPermission()
         }
+    }
 
+    private fun setupRecyclerView() {
+        binding.cityItemRecyclerView.layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        binding.cityItemRecyclerView.adapter = adapter
+    }
 
+    private fun observeCityData() {
+        viewModel.weatherData.observe(this) { data ->
+            val weather = data?.current
+            if (weather != null) {
+                Log.d(TAG, "Weather received: $weather")
+                adapter.submitList(listOf(weather))
+            } else {
+                Log.d(TAG, "No current weather data")
+            }
+        }
     }
 
     private fun openLocationSettings() {
@@ -77,13 +102,10 @@ class MainActivity : AppCompatActivity() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-
     private fun applyInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             val padding = resources.getDimensionPixelSize(R.dimen.screen_padding)
-
             v.setPadding(
                 systemBars.left + padding,
                 systemBars.top + padding,
@@ -93,7 +115,6 @@ class MainActivity : AppCompatActivity() {
             insets
         }
     }
-
 
     @SuppressLint("MissingPermission")
     override fun onRequestPermissionsResult(
@@ -115,7 +136,6 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     private fun requestLocationData() {
-
         val request = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
             1000
@@ -125,40 +145,40 @@ class MainActivity : AppCompatActivity() {
             request,
             object : LocationCallback() {
                 override fun onLocationResult(result: LocationResult) {
-                    val location = result.lastLocation ?: return
-                    mFusedLocationClient.removeLocationUpdates(this)
-                    getLocationWeatherDetails(location.latitude, location.longitude)
+                    val location = result.lastLocation
+                    if (location != null) {
+                        Log.d(TAG, "Location received: $location")
+                        mFusedLocationClient.removeLocationUpdates(this)
+                        if (Constant.isNetworkAvailable(applicationContext)) {
+                            viewModel.getLocationWeatherDetails(
+                                location.latitude,
+                                location.longitude
+                            )
+                        } else {
+                            Log.d(TAG, "Network unavailable, cannot fetch weather")
+                        }
+                    } else {
+                        Log.d(TAG, "Location result is null")
+                    }
                 }
             },
             Looper.getMainLooper()
         )
     }
 
-
-    //    ✅ It tells you whether the device’s location services are turned on not
     private fun isLocationEnable(): Boolean {
-        var locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
-
-    //    The user has granted location permission to YOUR APP for access location
     private fun requestPermission() {
         if (
-            ActivityCompat.shouldShowRequestPermissionRationale(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) ||
-            ActivityCompat.shouldShowRequestPermissionRationale(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
+            ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION) ||
+            ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)
         ) {
-            // User denied previously → then show explanation dialog
             showRequestDialog()
         } else {
-            // Ask for permission
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
@@ -183,41 +203,12 @@ class MainActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-            }.setNegativeButton("CANCEL") { dialog, _ ->
+            }
+            .setNegativeButton("CANCEL") { dialog, _ ->
                 dialog.cancel()
-            }.setTitle("Location Permission Needed")
+            }
+            .setTitle("Location Permission Needed")
             .setMessage("This app needs the Location permission, please accept to use location functionality")
             .show()
-    }
-
-    private fun getLocationWeatherDetails(latitude: Double, longitude: Double) {
-
-        if (!Constant.isNetworkAvailable(this)) {
-            Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        RetrofitClient.api.getWeatherDetails(
-            latitude,
-            longitude,
-            Constant.API_KEY,
-            Constant.METRIC_UNIT
-        ).enqueue(object : Callback<WeatherResponse> {
-
-            override fun onResponse(
-                call: Call<WeatherResponse>,
-                response: Response<WeatherResponse>
-            ) {
-                if (response.isSuccessful) {
-                    val data = response.body()
-                    Log.d("TAG", "onResponse: $data")
-
-                }
-            }
-
-            override fun onFailure(call: Call<WeatherResponse>, t: Throwable) {
-                Toast.makeText(this@MainActivity, "API failed", Toast.LENGTH_SHORT).show()
-            }
-        })
     }
 }

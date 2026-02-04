@@ -41,6 +41,7 @@
                 android:src="@drawable/app_logo" />
 
             <TextView
+                android:id="@+id/temperatureTxt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="23°"
@@ -88,6 +89,7 @@
                     android:src="@drawable/ic_rain" />
 
                 <TextView
+                    android:id="@+id/cloudCover"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="30%"
@@ -98,7 +100,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Precipitation"
+                    android:text="Cloud"
                     android:fontFamily="@font/poppins_light"
                     android:textColor="@color/white"
                     android:textSize="14sp" />
@@ -119,6 +121,7 @@
                     android:src="@drawable/ic_humidity" />
 
                 <TextView
+                    android:id="@+id/humidity"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="20%"
@@ -150,6 +153,7 @@
                     android:src="@drawable/ic_wind" />
 
                 <TextView
+                    android:id="@+id/windSpeed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="10km/h"
@@ -219,7 +223,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/tvCitiesLabel" />
 
-            <androidx.recyclerview.widget.RecyclerView
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/cityItemRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"

@@ -4,17 +4,17 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build.*
+import com.google.android.gms.location.LocationCallback
 
 object Constant {
 
-    const val API_KEY  = "d1607e2f4d8cd6ea126582247ea43f15"
     const val REQUEST_LOCATION_CONSTANT = 6223
     const val PREFERENCE_NAME = "SkySnap"
     const val NEW_USER = "NEW_USER"
 
-    const val BASE_URL = "https://api.openweathermap.org/data/"
+    const val BASE_URL = "https://api.open-meteo.com/"
 
-    const val METRIC_UNIT = "metric"
+    const val METRIC_UNIT = "metrics"
 
     fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager =

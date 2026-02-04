@@ -1,18 +1,20 @@
 package com.abhishek.internships.identifier.skysnap.model
 
+import kotlinx.serialization.Serializable
 
-class WeatherResponse {
-    val coord: Coord? = null
-    val weather: List<Weather>? = null
-    val base: String? = null
-    val main: Main? = null
-    val wind: Wind? = null
-    val clouds: Clouds? = null
-    val dt: Long? = null
-    val sys: Sys? = null
-    val timezone: Long? = null
-    val id: Long? = null
-    val name: String? = null
-    val cod: Long? = null
-}
+
+@Serializable
+data class WeatherResponse(
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val generationtime_ms: Double? = null,
+    val utc_offset_seconds: Int? = null,
+    val timezone: String? = null,
+    val timezone_abbreviation: String? = null,
+    val elevation: Int? = null,
+    val current_units: CurrentUnits? = null,
+    val current: Current? = null
+)
+
+
 
