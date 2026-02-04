@@ -12,10 +12,10 @@ import com.abhishek.internships.identifier.skysnap.model.Current
 
 class CityAdapter(
     var list: MutableList<Current>? = null,
-    var context : Context
 ) : RecyclerView.Adapter<CityAdapter.ViewHolder>() {
 
 
+    private val TAG = "CityAdapter"
 
     fun submitList(newList: List<Current>) {
         list?.clear()
@@ -41,9 +41,8 @@ class CityAdapter(
         position: Int
     ) {
         val item = list?.get(position)?.wind_speed_10m
-//        holder.binding.textView.text =
-//            "${item} : C"
-        Log.d("TAG", "onBindViewHolder: $item")
+//        holder.binding.textView.text = item.
+        Log.d(TAG, "onBindViewHolder: $item")
     }
 
 

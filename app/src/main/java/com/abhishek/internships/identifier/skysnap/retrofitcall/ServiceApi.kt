@@ -11,6 +11,6 @@ interface ServiceApi {
     suspend fun getCurrentWeather(
         @Query("latitude") latitude: Double,
         @Query("longitude") longitude: Double,
-        @Query("current") current: String = "temperature_2m,relative_humidity_2m,wind_speed_10m,cloud_cover"
+        @Query("current") current: String = "temperature_2m,relative_humidity_2m,wind_speed_10m,surface_pressure"
     ): WeatherResponse
 }

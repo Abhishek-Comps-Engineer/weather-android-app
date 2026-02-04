@@ -8,5 +8,5 @@ data class CurrentUnits(
     val temperature_2m: String? = null,
     val relative_humidity_2m: String? = null,
     val wind_speed_10m: String? = null,
-    val cloud_cover: String? = null
+    val surface_pressure: String? = null
 )

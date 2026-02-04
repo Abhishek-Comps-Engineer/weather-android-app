@@ -9,5 +9,5 @@ data class Current(
     val temperature_2m: Double? = null,
     val relative_humidity_2m: Int? = null,
     val wind_speed_10m: Double? = null,
-    val cloud_cover: Int? = null
+    val surface_pressure: Double? = null
 )

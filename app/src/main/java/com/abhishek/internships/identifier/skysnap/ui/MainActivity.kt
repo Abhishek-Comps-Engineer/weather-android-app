@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
@@ -15,6 +16,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -38,13 +40,14 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
     private val viewModel by viewModels<MainViewModel>()
-    private val adapter = CityAdapter(context = this)
+    private val adapter = CityAdapter()
     private val TAG = "MainActivity"
 
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,12 +82,26 @@ class MainActivity : AppCompatActivity() {
         binding.cityItemRecyclerView.adapter = adapter
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun observeCityData() {
-        viewModel.weatherData.observe(this) { data ->
-            val weather = data?.current
+        viewModel.weatherData.observe(this) { weather ->
             if (weather != null) {
                 Log.d(TAG, "Weather received: $weather")
-                adapter.submitList(listOf(weather))
+                binding.windSpeed.text = weather.current?.wind_speed_10m.toString()
+                binding.temperatureTxt.text = buildString {
+                    append(weather.current?.temperature_2m.toString())
+                    append(weather.current_units?.temperature_2m)
+                }
+                binding.humidity.text = buildString {
+                    append(weather.current?.relative_humidity_2m.toString())
+                    append(weather.current_units?.relative_humidity_2m)
+                }
+                binding.cloudCover.text = buildString{
+                    append(weather.current?.surface_pressure.toString())
+                    append(weather.current_units?.surface_pressure)
+                }
+
+                binding.tvDate.text = viewModel.formatDate(weather.current?.time.toString())
             } else {
                 Log.d(TAG, "No current weather data")
             }
