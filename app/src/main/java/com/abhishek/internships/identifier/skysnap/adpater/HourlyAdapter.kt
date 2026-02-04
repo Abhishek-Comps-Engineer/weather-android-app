@@ -25,8 +25,6 @@ class HourlyAdapter : RecyclerView.Adapter<HourlyAdapter.HourlyViewHolder>() {
     )
 
     fun setData(weatherResponse: WeatherResponse) {
-        listTime?.clear()
-        listTemperature?.clear()
         listTime = weatherResponse.hourly?.time!! as MutableList<String>?
         listTemperature = weatherResponse.hourly.temperature_2m!! as MutableList<Double>?
         hourlyUnits = weatherResponse.hourly_units

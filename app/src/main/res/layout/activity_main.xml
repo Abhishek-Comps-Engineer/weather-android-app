@@ -47,7 +47,7 @@
                 android:text="23°C"
                 android:layout_gravity="center_horizontal"
                 android:textColor="@android:color/white"
-                android:textSize="100sp"
+                android:textSize="120sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
@@ -211,6 +211,7 @@
             android:layout_marginTop="24dp"
             android:text="@string/other_cities"
             android:textColor="@android:color/white"
+            android:visibility="gone"
             android:textSize="16sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/hourlyScroll" />
@@ -219,6 +220,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_plus"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/tvCitiesLabel"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/tvCitiesLabel" />

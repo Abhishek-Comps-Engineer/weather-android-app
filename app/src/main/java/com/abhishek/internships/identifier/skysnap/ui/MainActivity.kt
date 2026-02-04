@@ -93,6 +93,9 @@ class MainActivity : AppCompatActivity() {
         binding.hourlyScroll.adapter = adapterHour
     }
 
+    fun formatTemperature(temp: Double?): String {
+        return temp?.toInt().toString()
+    }
     @RequiresApi(Build.VERSION_CODES.O)
     private fun observeCityData() {
         viewModel.weatherData.observe(this) { weather ->
@@ -100,7 +103,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "Weather received: $weather")
                 binding.windSpeed.text = weather.current?.wind_speed_10m.toString()
                 binding.temperatureTxt.text = buildString {
-                    append(weather.current?.temperature_2m.toString())
+                    append(formatTemperature(weather.current?.temperature_2m))
                     append(weather.current_units?.temperature_2m)
                 }
                 binding.humidity.text = buildString {
